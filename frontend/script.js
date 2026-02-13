@@ -1,4 +1,4 @@
-const API = "https://srv-d67j26sr85hc73bovuug.onrender.com";
+const API = "https://honorine-co-api.onrender.com";
 
 
 
