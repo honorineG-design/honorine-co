@@ -1,15 +1,12 @@
 import os
-import sys
 from flask import Flask, request, jsonify, session
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
-from functools import wraps
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+app = Flask(__name__)  
 
-app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'dev-key-change-me')
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////tmp/honorine.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
