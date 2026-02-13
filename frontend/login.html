@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Honorine Co. – Login</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body data-page="login">
+  <div id="toast">
+    <div id="toastDot"></div>
+    <span id="toastMsg"></span>
+  </div>
+
+  <main>
+    <div class="card auth-container">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <div>
+          <div class="logo" data-i18n="appTitle"></div>
+          <div class="subtitle" data-i18n="appSubtitle"></div>
+        </div>
+        <div class="lang-switcher">
+          <button data-lang-btn data-lang-btn="en">EN</button>
+          <button data-lang-btn data-lang-btn="fr">FR</button>
+          <button data-lang-btn data-lang-btn="rw">RW</button>
+          <button data-lang-btn data-lang-btn="sw">SW</button>
+        </div>
+      </div>
+
+      <h1 data-i18n="loginTitle"></h1>
+
+      <div class="field">
+        <label data-i18n="email"></label>
+        <input id="loginEmail" type="email" placeholder="you@company.com">
+      </div>
+
+      <div class="field">
+        <label data-i18n="password"></label>
+        <input id="loginPass" type="password" placeholder="••••••••">
+      </div>
+
+      <div id="loginErr" class="error"></div>
+
+      <button class="btn-main" onclick="login()">
+        <span data-i18n="loginBtn"></span>
+        <span class="spin" style="display:none;">…</span>
+      </button>
+
+      <p style="margin-top:12px;font-size:13px;color:#9ca3af;">
+        <span data-i18n="needAccount"></span>
+        <a href="register.html" style="color:#f97316;" data-i18n="goToRegister"></a>
+      </p>
+    </div>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>

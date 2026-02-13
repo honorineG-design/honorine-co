@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Honorine Co. Employee Reviews</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body data-page="dashboard">
+  <div id="toast">
+    <div id="toastDot"></div>
+    <span id="toastMsg"></span>
+  </div>
+
+  <header>
+    <div>
+      <div class="logo" data-i18n="appTitle"></div>
+      <div class="subtitle" data-i18n="appSubtitle"></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:16px;">
+      <div class="lang-switcher">
+        <button data-lang-btn data-lang-btn="en">EN</button>
+        <button data-lang-btn data-lang-btn="fr">FR</button>
+        <button data-lang-btn data-lang-btn="rw">RW</button>
+        <button data-lang-btn data-lang-btn="sw">SW</button>
+      </div>
+      <div class="user-info">
+        <div class="avatar uavi">H</div>
+        <span class="uname">User</span>
+        <button class="btn-ghost" onclick="logout()" data-i18n="logout"></button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="card">
+      <h1 data-i18n="heroTitle"></h1>
+      <p class="muted" data-i18n="heroBody"></p>
+
+      <div class="dashboard">
+        <section>
+          <h2 data-i18n="samplesTitle"></h2>
+          <div style="display:flex;gap:8px;margin:8px 0 12px;">
+            <button class="btn-ghost" onclick="setSample(0)">1</button>
+            <button class="btn-ghost" onclick="setSample(1)">2</button>
+            <button class="btn-ghost" onclick="setSample(2)">3</button>
+          </div>
+
+          <textarea id="feedbackText" placeholder=""></textarea>
+
+          <div id="analyzeErr" class="error"></div>
+
+          <button id="analyzeBtn" class="btn-main" onclick="analyze()">
+            <span data-i18n="analyzeBtn"></span>
+            <span class="spin" style="display:none;">…</span>
+          </button>
+
+          <div id="result" class="result-card">
+            <div class="result-top">
+              <div id="resultLabel" class="result-label">
+                <span class="badge">Positive</span>
+              </div>
+              <div id="confBadge" class="conf-badge">0% confidence</div>
+            </div>
+            <p id="resultNote" class="result-note"></p>
+          </div>
+        </section>
+
+        <aside>
+          <div class="hist-section-header">
+            <h2 data-i18n="historyTitle"></h2>
+            <div class="stats">
+              <span><span data-i18n="statsTotal"></span>: <span id="stTotal">0</span></span>
+              <span><span data-i18n="statsPos"></span>: <span id="stPos">0</span></span>
+              <span><span data-i18n="statsNeg"></span>: <span id="stNeg">0</span></span>
+            </div>
+          </div>
+          <div id="histList"></div>
+        </aside>
+      </div>
+    </div>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
