@@ -6,7 +6,6 @@ function clearToken() { localStorage.removeItem('hc_token'); localStorage.remove
 
 async function apiCall(endpoint, options = {}) {
     const url = `${API_URL}${endpoint}`;
-    console.log('Calling:', url);
     try {
         const token = getToken();
         const headers = { 'Content-Type': 'application/json' };
@@ -18,9 +17,7 @@ async function apiCall(endpoint, options = {}) {
             body: options.body || undefined
         });
 
-        console.log('Response status:', res.status);
         const data = await res.json();
-        console.log('Response data:', data);
         return data;
     } catch (err) {
         console.error('API CALL FAILED:', url, err.message);
