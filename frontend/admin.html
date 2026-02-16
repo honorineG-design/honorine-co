@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Honorine Co. Employee Feedback — Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="app-page">
+
+    <nav class="navbar">
+        <div class="nav-brand">
+            <span class="logo-mark">P</span>
+            <span class="nav-title">Honorine Co.</span>
+        </div>
+        <div class="nav-links">
+            <a href="index.html" class="nav-link">Analyze</a>
+            <a href="reviews.html" class="nav-link">Reviews</a>
+            <a href="admin.html" class="nav-link active">Admin</a>
+        </div>
+        <div class="nav-user">
+            <span class="user-badge admin-badge" id="userBadge">Admin</span>
+            <button class="btn-ghost" onclick="handleLogout()">Sign Out</button>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <div class="page-header">
+            <p class="page-eyebrow">Control Center</p>
+            <h1 class="page-title">Admin Dashboard</h1>
+            <p class="page-desc">Organization-wide sentiment overview and feedback management</p>
+        </div>
+
+        <div class="stats-grid" id="statsGrid">
+            <div class="stat-card">
+                <div class="stat-icon">📊</div>
+                <div class="stat-body">
+                    <div class="stat-val" id="statTotal">—</div>
+                    <div class="stat-key">Total Feedback</div>
+                </div>
+            </div>
+            <div class="stat-card stat-positive">
+                <div class="stat-icon">✅</div>
+                <div class="stat-body">
+                    <div class="stat-val" id="statPositive">—</div>
+                    <div class="stat-key">Positive</div>
+                </div>
+            </div>
+            <div class="stat-card stat-negative">
+                <div class="stat-icon">⚠️</div>
+                <div class="stat-body">
+                    <div class="stat-val" id="statNegative">—</div>
+                    <div class="stat-key">Negative</div>
+                </div>
+            </div>
+            <div class="stat-card stat-rate">
+                <div class="stat-icon">📈</div>
+                <div class="stat-body">
+                    <div class="stat-val" id="statRate">—</div>
+                    <div class="stat-key">Positivity Rate</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">👥</div>
+                <div class="stat-body">
+                    <div class="stat-val" id="statUsers">—</div>
+                    <div class="stat-key">Total Users</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card" style="margin-bottom:2rem">
+            <div class="card-header">
+                <h2 class="card-title">Department Breakdown</h2>
+            </div>
+            <div id="deptChart" class="dept-chart"></div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">All Feedback Records</h2>
+                <button class="btn-ghost" onclick="loadData()">↻ Refresh</button>
+            </div>
+            <div id="feedbackTable" class="table-wrap">
+                <div class="loading-state">
+                    <div class="loading-spinner"></div>
+                    <p>Loading...</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="api.js"></script>
+    <script>
+        (async () => {
+            const me = await checkAuth();
+            if (!me.authenticated) return window.location.href = 'login.html';
+            if (!me.is_admin) return window.location.href = 'index.html';
+            document.getElementById('userBadge').textContent = me.username;
+            await loadData();
+        })();
+
+        async function loadData() {
+            const [stats, feedback] = await Promise.all([getStats(), getAllFeedback()]);
+
+            if (!stats.error) {
+                document.getElementById('statTotal').textContent = stats.total_feedback;
+                document.getElementById('statPositive').textContent = stats.positive;
+                document.getElementById('statNegative').textContent = stats.negative;
+                document.getElementById('statRate').textContent = stats.positivity_rate + '%';
+                document.getElementById('statUsers').textContent = stats.total_users;
+
+                const maxCount = Math.max(...stats.departments.map(d => d.count), 1);
+                document.getElementById('deptChart').innerHTML = stats.departments.length === 0
+                    ? '<p class="muted-text">No department data yet</p>'
+                    : stats.departments.map(d => `
+                        <div class="dept-row">
+                            <span class="dept-name">${d.name}</span>
+                            <div class="dept-bar-wrap">
+                                <div class="dept-bar" style="width:${(d.count / maxCount * 100)}%"></div>
+                            </div>
+                            <span class="dept-count">${d.count}</span>
+                        </div>
+                    `).join('');
+            }
+
+            if (!feedback.error) {
+                renderTable(feedback);
+            }
+        }
+
+        function renderTable(records) {
+            if (records.length === 0) {
+                document.getElementById('feedbackTable').innerHTML = '<p class="muted-text" style="padding:2rem">No feedback records yet.</p>';
+                return;
+            }
+            document.getElementById('feedbackTable').innerHTML = `
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Employee</th>
+                            <th>Department</th>
+                            <th>Sentiment</th>
+                            <th>Confidence</th>
+                            <th>Submitted By</th>
+                            <th>Date</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${records.map(r => `
+                            <tr>
+                                <td class="td-employee">
+                                    <div class="employee-avatar small">${r.employee_name.charAt(0)}</div>
+                                    ${r.employee_name}
+                                </td>
+                                <td>${r.department || '—'}</td>
+                                <td>
+                                    <span class="badge ${r.sentiment === 'POSITIVE' ? 'badge-positive' : 'badge-negative'}">
+                                        ${r.sentiment}
+                                    </span>
+                                </td>
+                                <td>${r.confidence}%</td>
+                                <td>${r.submitted_by}</td>
+                                <td>${r.date}</td>
+                                <td>
+                                    <button class="btn-danger-sm" onclick="handleDelete(${r.id}, this)">Delete</button>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
+
+        async function handleDelete(id, btn) {
+            if (!confirm('Delete this feedback record?')) return;
+            btn.textContent = '...';
+            btn.disabled = true;
+            const result = await deleteFeedback(id);
+            if (result.message) {
+                btn.closest('tr').remove();
+            } else {
+                alert('Delete failed');
+                btn.textContent = 'Delete';
+                btn.disabled = false;
+            }
+        }
+
+        async function handleLogout() {
+            await logoutUser();
+            window.location.href = 'login.html';
+        }
+    </script>
+</body>
+</html>

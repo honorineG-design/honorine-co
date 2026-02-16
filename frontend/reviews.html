@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Honorine Co. Employee Feedback — Reviews</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="app-page">
+
+    <nav class="navbar">
+        <div class="nav-brand">
+            <span class="logo-mark">P</span>
+            <span class="nav-title">Honorine Co.</span>
+        </div>
+        <div class="nav-links">
+            <a href="index.html" class="nav-link">Analyze</a>
+            <a href="reviews.html" class="nav-link active">Reviews</a>
+            <span id="adminLink" class="nav-link hidden"><a href="admin.html">Admin</a></span>
+        </div>
+        <div class="nav-user">
+            <span class="user-badge" id="userBadge">—</span>
+            <button class="btn-ghost" onclick="handleLogout()">Sign Out</button>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <div class="page-header">
+            <p class="page-eyebrow">Feedback History</p>
+            <h1 class="page-title">Reviews</h1>
+            <p class="page-desc">Browse all analyzed employee feedback records</p>
+        </div>
+
+        <div class="filter-bar">
+            <div class="filter-group">
+                <button class="filter-btn active" data-filter="all">All</button>
+                <button class="filter-btn" data-filter="POSITIVE">Positive</button>
+                <button class="filter-btn" data-filter="NEGATIVE">Negative</button>
+            </div>
+            <div class="search-wrap">
+                <input type="text" id="searchInput" class="field-input search-input" placeholder="Search employee name...">
+            </div>
+        </div>
+
+        <div class="mini-stats" id="miniStats">
+            <div class="mini-stat">
+                <span class="mini-stat-val" id="statTotal">—</span>
+                <span class="mini-stat-key">Total</span>
+            </div>
+            <div class="mini-stat">
+                <span class="mini-stat-val positive" id="statPos">—</span>
+                <span class="mini-stat-key">Positive</span>
+            </div>
+            <div class="mini-stat">
+                <span class="mini-stat-val negative" id="statNeg">—</span>
+                <span class="mini-stat-key">Negative</span>
+            </div>
+        </div>
+
+        <div class="reviews-grid" id="reviewsGrid">
+            <div class="loading-state">
+                <div class="loading-spinner"></div>
+                <p>Loading feedback records...</p>
+            </div>
+        </div>
+    </main>
+
+    <script src="api.js"></script>
+    <script>
+        let allReviews = [];
+        let activeFilter = 'all';
+
+        (async () => {
+            const me = await checkAuth();
+            if (!me.authenticated) return window.location.href = 'login.html';
+            document.getElementById('userBadge').textContent = me.username;
+            if (me.is_admin) document.getElementById('adminLink').classList.remove('hidden');
+            await loadReviewsData();
+        })();
+
+        async function loadReviewsData() {
+            allReviews = await getAllFeedback();
+            if (allReviews.error) {
+                document.getElementById('reviewsGrid').innerHTML = `<p class="error-text">${allReviews.error}</p>`;
+                return;
+            }
+            const pos = allReviews.filter(r => r.sentiment === 'POSITIVE').length;
+            const neg = allReviews.filter(r => r.sentiment === 'NEGATIVE').length;
+            document.getElementById('statTotal').textContent = allReviews.length;
+            document.getElementById('statPos').textContent = pos;
+            document.getElementById('statNeg').textContent = neg;
+            renderReviews(allReviews);
+        }
+
+        function renderReviews(reviews) {
+            const grid = document.getElementById('reviewsGrid');
+            if (reviews.length === 0) {
+                grid.innerHTML = `<div class="empty-state"><div class="empty-icon">📋</div><p>No feedback records found</p><a href="index.html" class="btn-primary" style="display:inline-block;margin-top:1rem;padding:0.7rem 1.5rem">Add First Review</a></div>`;
+                return;
+            }
+            grid.innerHTML = reviews.map(r => `
+                <div class="review-card ${r.sentiment === 'POSITIVE' ? 'review-positive' : 'review-negative'}">
+                    <div class="review-header">
+                        <div class="review-employee">
+                            <div class="employee-avatar">${r.employee_name.charAt(0).toUpperCase()}</div>
+                            <div>
+                                <div class="employee-name">${r.employee_name}</div>
+                                <div class="employee-dept">${r.department || 'Unspecified'}</div>
+                            </div>
+                        </div>
+                        <div class="review-sentiment-badge ${r.sentiment === 'POSITIVE' ? 'badge-positive' : 'badge-negative'}">
+                            ${r.sentiment === 'POSITIVE' ? '↑' : '↓'} ${r.sentiment}
+                        </div>
+                    </div>
+                    <p class="review-text">"${r.text.length > 180 ? r.text.slice(0, 180) + '…' : r.text}"</p>
+                    <div class="review-footer">
+                        <span class="review-meta">${r.date}</span>
+                        <span class="review-meta">${r.confidence}% confidence</span>
+                        ${r.rating ? `<span class="review-meta">${'★'.repeat(r.rating)}${'☆'.repeat(5 - r.rating)}</span>` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                activeFilter = btn.dataset.filter;
+                applyFilters();
+            });
+        });
+
+        document.getElementById('searchInput').addEventListener('input', applyFilters);
+
+        function applyFilters() {
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            let filtered = allReviews;
+            if (activeFilter !== 'all') filtered = filtered.filter(r => r.sentiment === activeFilter);
+            if (search) filtered = filtered.filter(r => r.employee_name.toLowerCase().includes(search));
+            renderReviews(filtered);
+        }
+
+        async function handleLogout() {
+            await logoutUser();
+            window.location.href = 'login.html';
+        }
+    </script>
+</body>
+</html>

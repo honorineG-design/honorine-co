@@ -1,118 +1,185 @@
-import os
-from flask import Flask, request, jsonify, session
-from flask_sqlalchemy import SQLAlchemy
+from flask import Flask, request, jsonify
 from flask_cors import CORS
-from datetime import datetime
+from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
+from transformers import pipeline
+from models import db, User, Feedback
+import os
+from datetime import datetime
 
-app = Flask(__name__)  
+app = Flask(__name__)
+CORS(app, supports_credentials=True, origins=["*"])
 
-app.secret_key = os.environ.get('SECRET_KEY', 'dev-key-change-me')
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////tmp/honorine.db'
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-change-in-production')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///database.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-db = SQLAlchemy(app)
-CORS(app)
+db.init_app(app)
 
-class User(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    first_name = db.Column(db.String(50))
-    last_name = db.Column(db.String(50))
-    email = db.Column(db.String(120), unique=True)
-    phone = db.Column(db.String(20))
-    password = db.Column(db.String(200))
+login_manager = LoginManager()
+login_manager.init_app(app)
 
-class Feedback(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer)
-    text = db.Column(db.Text)
-    sentiment = db.Column(db.String(20))
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+print("Loading AI model...")
+sentiment_analyzer = pipeline(
+    "sentiment-analysis",
+    model="distilbert-base-uncased-finetuned-sst-2-english"
+)
+print("AI model loaded successfully!")
 
-def login_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if 'user_id' not in session:
-            return jsonify({'error': 'Unauthorized'}), 401
-        return f(*args, **kwargs)
-    return decorated_function
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
 
-with app.app_context():
-    db.create_all()
+@app.route('/')
+def home():
+    return jsonify({"status": "Employee Analysis API is running!", "model": "DistilBERT Sentiment Analysis"})
 
-def simple_sentiment(text):
-    t = text.lower()
-    bad_words = ['bad', 'hate', 'angry', 'frustrated', 'toxic']
-    if any(word in t for word in bad_words):
-        return 'NEGATIVE', 0.85
-    return 'POSITIVE', 0.9
-
-@app.route('/register', methods=['POST'])
+@app.route('/api/register', methods=['POST'])
 def register():
-    data = request.json
-    if User.query.filter_by(email=data['email']).first():
-        return jsonify({'error': 'Email exists'}), 400
-    
-    user = User(
-        first_name=data['first_name'],
-        last_name=data['last_name'],
-        email=data['email'],
-        phone=data['phone'],
-        password=generate_password_hash(data['password'])
-    )
+    data = request.get_json()
+    username = data.get('username', '').strip()
+    password = data.get('password', '')
+
+    if not username or not password:
+        return jsonify({"error": "Username and password required"}), 400
+
+    if User.query.filter_by(username=username).first():
+        return jsonify({"error": "Username already exists"}), 409
+
+    hashed_pw = generate_password_hash(password)
+    is_admin = User.query.count() == 0
+    user = User(username=username, password=hashed_pw, is_admin=is_admin)
     db.session.add(user)
     db.session.commit()
-    return jsonify({'message': 'OK'}), 201
+    return jsonify({"message": "Account created successfully!", "is_admin": is_admin})
 
-@app.route('/login', methods=['POST'])
+@app.route('/api/login', methods=['POST'])
 def login():
-    data = request.json
-    user = User.query.filter_by(email=data['email']).first()
-    if user and check_password_hash(user.password, data['password']):
-        session['user_id'] = user.id
-        return jsonify({'name': f"{user.first_name} {user.last_name}"}), 200
-    return jsonify({'error': 'Invalid'}), 401
+    data = request.get_json()
+    username = data.get('username', '').strip()
+    password = data.get('password', '')
 
-@app.route('/logout', methods=['POST'])
+    user = User.query.filter_by(username=username).first()
+    if not user or not check_password_hash(user.password, password):
+        return jsonify({"error": "Invalid username or password"}), 401
+
+    login_user(user, remember=True)
+    return jsonify({
+        "message": "Login successful",
+        "username": user.username,
+        "is_admin": user.is_admin,
+        "user_id": user.id
+    })
+
+@app.route('/api/logout', methods=['POST'])
+@login_required
 def logout():
-    session.pop('user_id', None)
-    return jsonify({'message': 'OK'})
+    logout_user()
+    return jsonify({"message": "Logged out"})
 
-@app.route('/me')
+@app.route('/api/me', methods=['GET'])
 def me():
-    return jsonify({'logged_in': 'user_id' in session})
+    if current_user.is_authenticated:
+        return jsonify({
+            "authenticated": True,
+            "username": current_user.username,
+            "is_admin": current_user.is_admin,
+            "user_id": current_user.id
+        })
+    return jsonify({"authenticated": False})
 
-@app.route('/analyze', methods=['POST'])
+@app.route('/api/analyze', methods=['POST'])
 @login_required
 def analyze():
-    text = request.json['text']
-    sentiment, score = simple_sentiment(text)
-    
-    fb = Feedback(user_id=session['user_id'], text=text, sentiment=sentiment)
-    db.session.add(fb)
+    data = request.get_json()
+    text = data.get('text', '').strip()
+    employee_name = data.get('employee_name', 'Unknown').strip()
+    department = data.get('department', '').strip()
+    rating = data.get('rating', None)
+
+    if not text:
+        return jsonify({"error": "Feedback text is required"}), 400
+
+    if len(text) > 512:
+        text = text[:512]
+
+    result = sentiment_analyzer(text)[0]
+    sentiment = result['label']
+    confidence = round(result['score'] * 100, 2)
+
+    record = Feedback(
+        user_id=current_user.id,
+        employee_name=employee_name,
+        department=department,
+        text=text,
+        sentiment=sentiment,
+        confidence=confidence,
+        rating=rating
+    )
+    db.session.add(record)
     db.session.commit()
-    
-    return jsonify({'sentiment': sentiment, 'confidence': score})
 
-@app.route('/history')
+    return jsonify({
+        "sentiment": sentiment,
+        "confidence": confidence,
+        "employee_name": employee_name,
+        "id": record.id
+    })
+
+@app.route('/api/feedback', methods=['GET'])
 @login_required
-def history():
-    fbs = Feedback.query.filter_by(user_id=session['user_id']).all()
+def get_feedback():
+    if current_user.is_admin:
+        records = Feedback.query.order_by(Feedback.created_at.desc()).all()
+    else:
+        records = Feedback.query.filter_by(user_id=current_user.id).order_by(Feedback.created_at.desc()).all()
+
     return jsonify([{
-        'id': f.id, 
-        'text': f.text, 
-        'sentiment': f.sentiment
-    } for f in fbs])
+        "id": r.id,
+        "employee_name": r.employee_name,
+        "department": r.department,
+        "text": r.text,
+        "sentiment": r.sentiment,
+        "confidence": r.confidence,
+        "rating": r.rating,
+        "submitted_by": r.user.username if r.user else "Unknown",
+        "date": r.created_at.strftime("%b %d, %Y %H:%M")
+    } for r in records])
 
-@app.route('/feedback/<int:fid>', methods=['DELETE'])
+@app.route('/api/stats', methods=['GET'])
 @login_required
-def delete_feedback(fid):
-    fb = Feedback.query.filter_by(id=fid, user_id=session['user_id']).first()
-    if fb:
-        db.session.delete(fb)
-        db.session.commit()
-        return jsonify({'message': 'OK'})
-    return jsonify({'error': 'Not found'}), 404
+def get_stats():
+    total = Feedback.query.count()
+    positive = Feedback.query.filter_by(sentiment='POSITIVE').count()
+    negative = Feedback.query.filter_by(sentiment='NEGATIVE').count()
+    total_users = User.query.count()
+
+    dept_stats = db.session.query(
+        Feedback.department,
+        db.func.count(Feedback.id).label('count')
+    ).group_by(Feedback.department).all()
+
+    return jsonify({
+        "total_feedback": total,
+        "positive": positive,
+        "negative": negative,
+        "total_users": total_users,
+        "positivity_rate": round((positive / total * 100), 1) if total > 0 else 0,
+        "departments": [{"name": d[0] or "Unspecified", "count": d[1]} for d in dept_stats]
+    })
+
+@app.route('/api/feedback/<int:id>', methods=['DELETE'])
+@login_required
+def delete_feedback(id):
+    if not current_user.is_admin:
+        return jsonify({"error": "Admin access required"}), 403
+    record = Feedback.query.get_or_404(id)
+    db.session.delete(record)
+    db.session.commit()
+    return jsonify({"message": "Deleted successfully"})
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
+    with app.app_context():
+        db.create_all()
+        print("Database tables created.")
+    app.run(debug=True, port=5000)
