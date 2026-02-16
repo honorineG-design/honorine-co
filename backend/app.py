@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
+from textblob import TextBlob
 from models import db, User, Feedback
 import os
 from datetime import datetime
@@ -18,20 +19,16 @@ db.init_app(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
 
-_sentiment_analyzer = None
-
-def get_sentiment_analyzer():
-    global _sentiment_analyzer
-    if _sentiment_analyzer is None:
-        print("Loading AI model on first use...")
-        from transformers import pipeline
-        _sentiment_analyzer = pipeline(
-            "sentiment-analysis",
-            model="distilbert-base-uncased-finetuned-sst-2-english",
-            device=-1   
-        )
-        print("AI model loaded!")
-    return _sentiment_analyzer
+def analyze_sentiment(text):
+    analysis = TextBlob(text)
+    polarity = analysis.sentiment.polarity  # -1 to +1
+    if polarity >= 0:
+        sentiment = "POSITIVE"
+        confidence = round(50 + (polarity * 50), 2)
+    else:
+        sentiment = "NEGATIVE"
+        confidence = round(50 + (abs(polarity) * 50), 2)
+    return sentiment, confidence
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -110,10 +107,7 @@ def analyze():
     if len(text) > 512:
         text = text[:512]
 
-    analyzer = get_sentiment_analyzer()
-    result = analyzer(text)[0]
-    sentiment = result['label']
-    confidence = round(result['score'] * 100, 2)
+    sentiment, confidence = analyze_sentiment(text)
 
     record = Feedback(
         user_id=current_user.id,
