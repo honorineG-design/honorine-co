@@ -2,7 +2,6 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
-from transformers import pipeline
 from models import db, User, Feedback
 import os
 from datetime import datetime
@@ -19,12 +18,20 @@ db.init_app(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
 
-print("Loading AI model...")
-sentiment_analyzer = pipeline(
-    "sentiment-analysis",
-    model="distilbert-base-uncased-finetuned-sst-2-english"
-)
-print("AI model loaded successfully!")
+_sentiment_analyzer = None
+
+def get_sentiment_analyzer():
+    global _sentiment_analyzer
+    if _sentiment_analyzer is None:
+        print("Loading AI model on first use...")
+        from transformers import pipeline
+        _sentiment_analyzer = pipeline(
+            "sentiment-analysis",
+            model="distilbert-base-uncased-finetuned-sst-2-english",
+            device=-1   
+        )
+        print("AI model loaded!")
+    return _sentiment_analyzer
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -32,7 +39,7 @@ def load_user(user_id):
 
 @app.route('/')
 def home():
-    return jsonify({"status": "Employee Analysis API is running!", "model": "DistilBERT Sentiment Analysis"})
+    return jsonify({"status": "Honorine Co. Employee Feedback API is running!"})
 
 @app.route('/api/register', methods=['POST'])
 def register():
@@ -103,7 +110,8 @@ def analyze():
     if len(text) > 512:
         text = text[:512]
 
-    result = sentiment_analyzer(text)[0]
+    analyzer = get_sentiment_analyzer()
+    result = analyzer(text)[0]
     sentiment = result['label']
     confidence = round(result['score'] * 100, 2)
 
@@ -181,5 +189,5 @@ def delete_feedback(id):
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
-        print("Database tables created.")
+        print("Database ready.")
     app.run(debug=True, port=5000)
