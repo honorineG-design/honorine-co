@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Honorine Co. Employee Feedback — AI Analysis</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="app-page">
+
+    <nav class="navbar">
+        <div class="nav-brand">
+            <span class="logo-mark">H</span>
+            <span class="nav-title">Honorine Co.</span>
+        </div>
+        <div class="nav-links">
+            <a href="index.html" class="nav-link">Submit Review</a>
+            <a href="analyze.html" class="nav-link active">AI Analysis</a>
+            <a href="reviews.html" class="nav-link">Reviews</a>
+            <span id="adminLink" class="hidden"><a href="admin.html" class="nav-link">Admin</a></span>
+        </div>
+        <div class="nav-user">
+            <span class="user-badge" id="userBadge">—</span>
+            <button class="btn-ghost" onclick="handleLogout()">Sign Out</button>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <div class="page-header">
+            <p class="page-eyebrow">DistilBERT — Hugging Face</p>
+            <h1 class="page-title">AI Sentiment Analysis</h1>
+            <p class="page-desc">Paste any employee feedback text below and instantly receive an AI-powered sentiment score.</p>
+        </div>
+
+        <div class="content-grid">
+            <div class="card analysis-card">
+                <div class="card-header">
+                    <h2 class="card-title">Analyze Text</h2>
+                    <div class="ai-badge">
+                        <span class="ai-dot"></span> AI Ready
+                    </div>
+                </div>
+
+                <form id="analysisForm">
+                    <div class="form-row">
+                        <div class="field-group">
+                            <label class="field-label">Employee Name</label>
+                            <input type="text" id="employeeName" class="field-input" placeholder="Full name" required>
+                        </div>
+                        <div class="field-group">
+                            <label class="field-label">Department</label>
+                            <select id="department" class="field-input">
+                                <option value="">Select department</option>
+                                <option>Engineering</option>
+                                <option>Sales</option>
+                                <option>Marketing</option>
+                                <option>Human Resources</option>
+                                <option>Finance</option>
+                                <option>Operations</option>
+                                <option>Customer Support</option>
+                                <option>Other</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="field-group">
+                        <label class="field-label">Feedback Text to Analyze</label>
+                        <textarea id="feedbackText" class="field-input field-textarea"
+                            placeholder="Paste or type the feedback text here..."
+                            rows="5" required></textarea>
+                        <span class="char-count" id="charCount">0 / 512 characters</span>
+                    </div>
+
+                    <button type="submit" class="btn-primary btn-full" id="analyzeBtn">
+                        <span class="btn-text">⚡ Analyze with AI</span>
+                        <span class="btn-loader hidden">Analyzing●●●</span>
+                    </button>
+                </form>
+            </div>
+
+            <div class="card result-card" id="resultCard">
+                <div class="result-empty" id="resultEmpty">
+                    <div class="result-empty-icon">🧠</div>
+                    <p>Submit feedback to see AI analysis results here</p>
+                </div>
+
+                <div class="result-content hidden" id="resultContent">
+                    <div class="card-header">
+                        <h2 class="card-title">Analysis Result</h2>
+                    </div>
+
+                    <div class="sentiment-display" id="sentimentDisplay">
+                        <div class="sentiment-icon" id="sentimentIcon">—</div>
+                        <div class="sentiment-info">
+                            <span class="sentiment-label" id="sentimentLabel">—</span>
+                            <span class="sentiment-sub">AI Sentiment</span>
+                        </div>
+                        <div class="confidence-ring" id="confidenceRing">
+                            <svg viewBox="0 0 44 44">
+                                <circle cx="22" cy="22" r="18" fill="none" stroke="#1a1a2e" stroke-width="4"/>
+                                <circle cx="22" cy="22" r="18" fill="none" stroke="currentColor" stroke-width="4"
+                                    stroke-dasharray="113" stroke-dashoffset="113"
+                                    id="confidenceArc" transform="rotate(-90 22 22)"/>
+                            </svg>
+                            <span id="confidenceText">0%</span>
+                        </div>
+                    </div>
+
+                    <div class="result-details">
+                        <div class="detail-row">
+                            <span class="detail-key">Employee</span>
+                            <span class="detail-val" id="resEmployee">—</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-key">Confidence</span>
+                            <span class="detail-val" id="resConfidence">—</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-key">Model</span>
+                            <span class="detail-val">DistilBERT SST-2</span>
+                        </div>
+                    </div>
+
+                    <div class="insight-box" id="insightBox">
+                        <p class="insight-text" id="insightText">—</p>
+                    </div>
+
+                    <button class="btn-secondary btn-full" onclick="resetForm()">Analyze Another</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="api.js"></script>
+    <script>
+        (async () => {
+            const me = await checkAuth();
+            if (!me.authenticated) return window.location.href = 'login.html';
+            document.getElementById('userBadge').textContent = me.username;
+            if (me.is_admin) document.getElementById('adminLink').classList.remove('hidden');
+        })();
+
+        document.getElementById('feedbackText').addEventListener('input', function () {
+            const count = Math.min(this.value.length, 512);
+            document.getElementById('charCount').textContent = `${count} / 512 characters`;
+        });
+
+        document.getElementById('analysisForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('analyzeBtn');
+            setLoading(btn, true);
+            const result = await analyzeFeedback(
+                document.getElementById('feedbackText').value,
+                document.getElementById('employeeName').value,
+                document.getElementById('department').value,
+                0
+            );
+            setLoading(btn, false);
+            if (result.error) { alert('Error: ' + result.error); return; }
+            showResult(result);
+        });
+
+        function showResult(data) {
+            document.getElementById('resultEmpty').classList.add('hidden');
+            document.getElementById('resultContent').classList.remove('hidden');
+            const isPositive = data.sentiment === 'POSITIVE';
+            const display = document.getElementById('sentimentDisplay');
+            display.className = `sentiment-display ${isPositive ? 'sentiment-positive' : 'sentiment-negative'}`;
+            document.getElementById('sentimentIcon').textContent = isPositive ? '😊' : '😟';
+            document.getElementById('sentimentLabel').textContent = data.sentiment;
+            document.getElementById('resEmployee').textContent = data.employee_name;
+            document.getElementById('resConfidence').textContent = `${data.confidence}%`;
+            const arc = document.getElementById('confidenceArc');
+            arc.style.strokeDashoffset = 113 - (113 * data.confidence / 100);
+            document.getElementById('confidenceText').textContent = `${Math.round(data.confidence)}%`;
+            const insights = {
+                POSITIVE: ["Strong satisfaction signals detected. Consider this employee for leadership opportunities.", "Positive indicators found. This employee appears engaged and motivated."],
+                NEGATIVE: ["Concerning sentiment detected. Consider scheduling a 1-on-1 check-in.", "Negative indicators present. HR follow-up is recommended."]
+            };
+            const pool = insights[data.sentiment];
+            document.getElementById('insightText').textContent = pool[Math.floor(Math.random() * pool.length)];
+        }
+
+        function resetForm() {
+            document.getElementById('analysisForm').reset();
+            document.getElementById('resultEmpty').classList.remove('hidden');
+            document.getElementById('resultContent').classList.add('hidden');
+        }
+
+        function setLoading(btn, loading) {
+            btn.querySelector('.btn-text').classList.toggle('hidden', loading);
+            btn.querySelector('.btn-loader').classList.toggle('hidden', !loading);
+            btn.disabled = loading;
+        }
+
+        async function handleLogout() {
+            await logoutUser();
+            window.location.href = 'login.html';
+        }
+    </script>
+</body>
+</html>

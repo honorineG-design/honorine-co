@@ -850,3 +850,49 @@ select.field-input option { background: var(--card); }
 ::-webkit-scrollbar-track { background: var(--surface); }
 ::-webkit-scrollbar-thumb { background: var(--border-glow); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+.review-form-card { max-width: 820px; margin: 0 auto; }
+
+.form-section-title {
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: var(--gold);
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0.6rem;
+    margin-bottom: 1.25rem;
+}
+
+.rating-label {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-top: 0.4rem;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 1.75rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+}
+
+.success-banner {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    background: rgba(16,185,129,0.08);
+    border: 1px solid rgba(16,185,129,0.25);
+    border-radius: var(--radius);
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1.5rem;
+    color: var(--text);
+}
+
+.success-banner strong { display: block; color: var(--positive); margin-bottom: 0.2rem; }
+.success-banner p { font-size: 0.875rem; color: var(--text-muted); }
+.success-banner a { color: var(--gold); }
+.success-icon { font-size: 1.5rem; margin-top: 0.1rem; }
