@@ -1,26 +1,30 @@
-const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-    ? 'http://127.0.0.1:5000'
-    : 'https://honorine-co-production.up.railway.app';
+const API_URL = 'https://honorine-co-production.up.railway.app';
 
 function saveToken(token) { localStorage.setItem('hc_token', token); }
 function getToken() { return localStorage.getItem('hc_token'); }
 function clearToken() { localStorage.removeItem('hc_token'); localStorage.removeItem('hc_user'); }
 
 async function apiCall(endpoint, options = {}) {
+    const url = `${API_URL}${endpoint}`;
+    console.log('Calling:', url);
     try {
         const token = getToken();
         const headers = { 'Content-Type': 'application/json' };
         if (token) headers['Authorization'] = `Bearer ${token}`;
 
-        const res = await fetch(`${API_URL}${endpoint}`, {
-            headers: { ...headers, ...options.headers },
-            ...options
+        const res = await fetch(url, {
+            method: options.method || 'GET',
+            headers: { ...headers, ...(options.headers || {}) },
+            body: options.body || undefined
         });
+
+        console.log('Response status:', res.status);
         const data = await res.json();
+        console.log('Response data:', data);
         return data;
     } catch (err) {
-        console.error('API error:', err);
-        return { error: 'Connection failed. Is the backend running?' };
+        console.error('API CALL FAILED:', url, err.message);
+        return { error: err.message || 'Connection failed.' };
     }
 }
 
