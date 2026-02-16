@@ -8,7 +8,13 @@ import os
 from datetime import datetime
 
 app = Flask(__name__)
-CORS(app, supports_credentials=True, origins=["*"])
+
+CORS(app, supports_credentials=True, origins=[
+    "https://honorine-co.netlify.app",
+    "http://localhost:5500",
+    "http://127.0.0.1:5500",
+    "http://localhost:3000"
+])
 
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-change-in-production')
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///database.db')
@@ -21,7 +27,7 @@ login_manager.init_app(app)
 
 def analyze_sentiment(text):
     analysis = TextBlob(text)
-    polarity = analysis.sentiment.polarity  # -1 to +1
+    polarity = analysis.sentiment.polarity  
     if polarity >= 0:
         sentiment = "POSITIVE"
         confidence = round(50 + (polarity * 50), 2)
