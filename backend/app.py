@@ -1,20 +1,15 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from textblob import TextBlob
 from models import db, User, Feedback
 import os
-from datetime import datetime
+import jwt
+import datetime
 
 app = Flask(__name__)
 
-CORS(app, supports_credentials=True, origins=[
-    "https://honorine-co.netlify.app",
-    "http://localhost:5500",
-    "http://127.0.0.1:5500",
-    "http://localhost:3000"
-])
+CORS(app, origins="*", allow_headers=["Content-Type", "Authorization"])
 
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-change-in-production')
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///database.db')
@@ -22,12 +17,39 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db.init_app(app)
 
-login_manager = LoginManager()
-login_manager.init_app(app)
+def create_token(user):
+    payload = {
+        'user_id': user.id,
+        'username': user.username,
+        'is_admin': user.is_admin,
+        'exp': datetime.datetime.utcnow() + datetime.timedelta(days=7)
+    }
+    return jwt.encode(payload, app.config['SECRET_KEY'], algorithm='HS256')
+
+def get_current_user():
+    auth_header = request.headers.get('Authorization', '')
+    if not auth_header.startswith('Bearer '):
+        return None
+    token = auth_header.split(' ')[1]
+    try:
+        payload = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
+        return User.query.get(payload['user_id'])
+    except Exception:
+        return None
+
+def login_required(f):
+    from functools import wraps
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        user = get_current_user()
+        if not user:
+            return jsonify({"error": "Authentication required"}), 401
+        return f(user, *args, **kwargs)
+    return decorated
 
 def analyze_sentiment(text):
     analysis = TextBlob(text)
-    polarity = analysis.sentiment.polarity  
+    polarity = analysis.sentiment.polarity
     if polarity >= 0:
         sentiment = "POSITIVE"
         confidence = round(50 + (polarity * 50), 2)
@@ -35,10 +57,6 @@ def analyze_sentiment(text):
         sentiment = "NEGATIVE"
         confidence = round(50 + (abs(polarity) * 50), 2)
     return sentiment, confidence
-
-@login_manager.user_loader
-def load_user(user_id):
-    return User.query.get(int(user_id))
 
 @app.route('/')
 def home():
@@ -52,7 +70,6 @@ def register():
 
     if not username or not password:
         return jsonify({"error": "Username and password required"}), 400
-
     if User.query.filter_by(username=username).first():
         return jsonify({"error": "Username already exists"}), 409
 
@@ -73,34 +90,34 @@ def login():
     if not user or not check_password_hash(user.password, password):
         return jsonify({"error": "Invalid username or password"}), 401
 
-    login_user(user, remember=True)
+    token = create_token(user)
     return jsonify({
         "message": "Login successful",
+        "token": token,
         "username": user.username,
         "is_admin": user.is_admin,
         "user_id": user.id
     })
 
 @app.route('/api/logout', methods=['POST'])
-@login_required
 def logout():
-    logout_user()
     return jsonify({"message": "Logged out"})
 
 @app.route('/api/me', methods=['GET'])
 def me():
-    if current_user.is_authenticated:
+    user = get_current_user()
+    if user:
         return jsonify({
             "authenticated": True,
-            "username": current_user.username,
-            "is_admin": current_user.is_admin,
-            "user_id": current_user.id
+            "username": user.username,
+            "is_admin": user.is_admin,
+            "user_id": user.id
         })
     return jsonify({"authenticated": False})
 
 @app.route('/api/analyze', methods=['POST'])
 @login_required
-def analyze():
+def analyze(current_user):
     data = request.get_json()
     text = data.get('text', '').strip()
     employee_name = data.get('employee_name', 'Unknown').strip()
@@ -109,7 +126,6 @@ def analyze():
 
     if not text:
         return jsonify({"error": "Feedback text is required"}), 400
-
     if len(text) > 512:
         text = text[:512]
 
@@ -136,7 +152,7 @@ def analyze():
 
 @app.route('/api/feedback', methods=['GET'])
 @login_required
-def get_feedback():
+def get_feedback(current_user):
     if current_user.is_admin:
         records = Feedback.query.order_by(Feedback.created_at.desc()).all()
     else:
@@ -156,7 +172,7 @@ def get_feedback():
 
 @app.route('/api/stats', methods=['GET'])
 @login_required
-def get_stats():
+def get_stats(current_user):
     total = Feedback.query.count()
     positive = Feedback.query.filter_by(sentiment='POSITIVE').count()
     negative = Feedback.query.filter_by(sentiment='NEGATIVE').count()
@@ -178,7 +194,7 @@ def get_stats():
 
 @app.route('/api/feedback/<int:id>', methods=['DELETE'])
 @login_required
-def delete_feedback(id):
+def delete_feedback(current_user, id):
     if not current_user.is_admin:
         return jsonify({"error": "Admin access required"}), 403
     record = Feedback.query.get_or_404(id)
