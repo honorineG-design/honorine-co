@@ -1,6 +1,4 @@
-
-
-AI-powered HR tool using DistilBERT (Hugging Face) for sentiment analysis of employee feedback.
+# Honorine Co. Employee Feedback
 
 
 - **Frontend:** HTML, CSS, JavaScript → Netlify
@@ -35,9 +33,9 @@ ai-employee-analysis/
 ```
 git init
 git add .
-git commit -m "Initial commit - PulseHR"
+git commit -m "Initial commit - Honorine Co. Employee Feedback ` 
 git branch -M main
-git remote add origin https://github.com/YOUR_USERNAME/YOUR_REPO.git
+git remote add origin `https://github.com/YOUR_USERNAME/YOUR_REPO.git`
 git push -u origin main
 ```
 
@@ -46,7 +44,7 @@ git push -u origin main
 2. Click "New +" → "Web Service"
 3. Connect your GitHub repo
 4. Fill in these settings:
-   - Name: `pulsehr-backend`
+   - Name: `\honorine-co-backend`
    - Root Directory: `backend`
    - Runtime: `Python 3`
    - Build Command: `pip install -r requirements.txt`
@@ -54,7 +52,7 @@ git push -u origin main
 5. Under "Environment Variables", add:
    - `SECRET_KEY` = (any random long string, e.g. `mySuperSecretKey2024!`)
 6. Click "Create Web Service"
-7. Wait ~5 mins for first deploy. Copy your URL: `https://pulsehr-backend.onrender.com`
+7. Wait ~5 mins for first deploy. Copy your URL: `https://honorine-co-backend.onrender.com`
 
 
 1. Open `frontend/api.js`
