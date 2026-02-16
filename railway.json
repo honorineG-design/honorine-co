@@ -3,7 +3,6 @@
     "builder": "NIXPACKS"
   },
   "deploy": {
-    "startCommand": "gunicorn app:app --timeout 120 --workers 1 --threads 2",
-    "rootDirectory": "backend"
+    "startCommand": "gunicorn app:app --timeout 120 --workers 1 --threads 2"
   }
 }

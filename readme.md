@@ -44,7 +44,7 @@ git push -u origin main
 3. Select your Honorine-Co. repo
 4. Click "Deploy Now"
 5. Go to the Variables tab and add:
-   - `SECRET_KEY` = (any random long string, e.g. `HonorineCo2025!`)
+   - `SECRET_KEY` = (`HonorineCo2026!`)
 6. Go to Settings → Public Networking → click "Generate Domain"
 7. Copy your Railway URL: `https://honorine-co-production.up.railway.app`
 
