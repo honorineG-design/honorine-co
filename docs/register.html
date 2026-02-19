@@ -1,77 +1,114 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Honorine Co. – Register</title>
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Honorine-co Employee Feedback &ndash; Register</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
 </head>
-<body data-page="register">
-  <div id="toast">
-    <div id="toastDot"></div>
-    <span id="toastMsg"></span>
-  </div>
+<body class="auth-page">
 
-  <main>
-    <div class="card auth-container">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-        <div>
-          <div class="logo" data-i18n="appTitle"></div>
-          <div class="subtitle" data-i18n="appSubtitle"></div>
+    <div class="auth-split">
+        <div class="auth-brand">
+            <div class="brand-content">
+                <div class="brand-logo">
+                    <span class="logo-mark">H</span>
+                </div>
+                <h1 class="brand-name">Honorine-co</h1>
+                <p class="brand-tagline">Employee Feedback Portal</p>
+                <div class="brand-features">
+                    <div class="feature-item"><span class="feat-dot"></span>Submit Employee Reviews</div>
+                    <div class="feature-item"><span class="feat-dot"></span>AI Sentiment Analysis</div>
+                    <div class="feature-item"><span class="feat-dot"></span>HR Admin Dashboard</div>
+                </div>
+            </div>
+            <div class="brand-bg-decoration"></div>
         </div>
-        <div class="lang-switcher">
-          <button data-lang-btn data-lang-btn="en">EN</button>
-          <button data-lang-btn data-lang-btn="fr">FR</button>
-          <button data-lang-btn data-lang-btn="rw">RW</button>
-          <button data-lang-btn data-lang-btn="sw">SW</button>
+
+        <div class="auth-form-panel">
+            <div class="auth-form-wrap">
+
+                <div id="authMessage" class="auth-message hidden"></div>
+
+                <div class="form-header">
+                    <p class="form-eyebrow">New account</p>
+                    <h2 class="form-title">Register</h2>
+                    <p class="form-sub">Create your Honorine-co HR portal account</p>
+                </div>
+
+                <form id="registerForm" class="auth-form">
+                    <div class="field-group">
+                        <label class="field-label">Username</label>
+                        <input type="text" id="regUsername" class="field-input" placeholder="Choose a username" required>
+                    </div>
+                    <div class="field-group">
+                        <label class="field-label">Password</label>
+                        <input type="password" id="regPassword" class="field-input" placeholder="Choose a password" required>
+                    </div>
+                    <div class="field-group">
+                        <label class="field-label">Confirm Password</label>
+                        <input type="password" id="regPasswordConfirm" class="field-input" placeholder="Repeat your password" required>
+                    </div>
+                    <button type="submit" class="btn-primary btn-full" id="registerBtn">
+                        <span class="btn-text">Create Account</span>
+                        <span class="btn-loader hidden">&#9679;&#9679;&#9679;</span>
+                    </button>
+                </form>
+
+                <div class="toggle-wrap">
+                    <p>Already have an account? <a href="login.html" style="color:var(--gold)">Sign in here</a></p>
+                </div>
+
+            </div>
         </div>
-      </div>
-
-      <h1 data-i18n="registerTitle"></h1>
-
-      <div class="field">
-        <label data-i18n="firstName"></label>
-        <input id="regFirst" type="text" placeholder="Honorine">
-      </div>
-
-      <div class="field">
-        <label data-i18n="lastName"></label>
-        <input id="regLast" type="text" placeholder="Uwase">
-      </div>
-
-      <div class="field">
-        <label data-i18n="email"></label>
-        <input id="regEmail" type="email" placeholder="you@company.com">
-      </div>
-
-      <div class="field">
-        <label data-i18n="phone"></label>
-        <input id="regPhone" type="text" placeholder="+2507...">
-      </div>
-
-      <div class="field">
-        <label data-i18n="password"></label>
-        <input id="regPass" type="password" placeholder="••••••••">
-      </div>
-
-      <div class="field">
-        <label data-i18n="confirmPassword"></label>
-        <input id="regConfirm" type="password" placeholder="••••••••">
-      </div>
-
-      <div id="regErr" class="error"></div>
-
-      <button class="btn-main" onclick="register()">
-        <span data-i18n="registerBtn"></span>
-        <span class="spin" style="display:none;">…</span>
-      </button>
-
-      <p style="margin-top:12px;font-size:13px;color:#9ca3af;">
-        <span data-i18n="haveAccount"></span>
-        <a href="login.html" style="color:#f97316;" data-i18n="goToLogin"></a>
-      </p>
     </div>
-  </main>
 
-  <script src="script.js"></script>
+    <script src="api.js"></script>
+    <script>
+        // Redirect if already logged in
+        (async () => {
+            const me = await checkAuth();
+            if (me.authenticated) {
+                window.location.href = me.is_admin ? 'admin.html' : 'index.html';
+            }
+        })();
+
+        function showMessage(msg, type) {
+            const el = document.getElementById('authMessage');
+            el.textContent = msg;
+            el.className = `auth-message ${type}`;
+        }
+
+        function setLoading(btn, loading) {
+            btn.querySelector('.btn-text').classList.toggle('hidden', loading);
+            btn.querySelector('.btn-loader').classList.toggle('hidden', !loading);
+            btn.disabled = loading;
+        }
+
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const password = document.getElementById('regPassword').value;
+            const confirm = document.getElementById('regPasswordConfirm').value;
+            if (password !== confirm) {
+                showMessage('Passwords do not match.', 'error');
+                return;
+            }
+            const btn = document.getElementById('registerBtn');
+            setLoading(btn, true);
+            const result = await registerUser(
+                document.getElementById('regUsername').value,
+                password
+            );
+            setLoading(btn, false);
+            if (result.error) {
+                showMessage(result.error, 'error');
+            } else {
+                showMessage('Account created! Redirecting to sign in...', 'success');
+                setTimeout(() => { window.location.href = 'login.html'; }, 1200);
+            }
+        });
+    </script>
 </body>
 </html>

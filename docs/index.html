@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Honorine Co. Employee Feedback — Submit Review</title>
+    <title>Honorine-co Employee Feedback &ndash; Submit Review</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
@@ -13,31 +13,32 @@
     <nav class="navbar">
         <div class="nav-brand">
             <span class="logo-mark">H</span>
-            <span class="nav-title">Honorine Co.</span>
+            <span class="nav-title">Honorine-co</span>
         </div>
         <div class="nav-links">
             <a href="index.html" class="nav-link active">Submit Review</a>
+            <a href="analyze.html" class="nav-link">AI Analysis</a>
             <a href="reviews.html" class="nav-link">Reviews</a>
             <span id="adminLink" class="hidden"><a href="admin.html" class="nav-link">Admin</a></span>
         </div>
         <div class="nav-user">
-            <span class="user-badge" id="userBadge">—</span>
+            <span class="user-badge" id="userBadge">&ndash;</span>
             <button class="btn-ghost" onclick="handleLogout()">Sign Out</button>
         </div>
     </nav>
 
     <main class="main-content">
         <div class="page-header">
-            <p class="page-eyebrow">Honorine Co. — HR Portal</p>
+            <p class="page-eyebrow">Honorine-co &ndash; HR Portal</p>
             <h1 class="page-title">Submit Employee Review</h1>
             <p class="page-desc">Fill in the form below and click Submit Review. Our AI will automatically analyze the sentiment of your feedback.</p>
         </div>
 
         <div id="successBanner" class="success-banner hidden">
-            <span class="success-icon"></span>
+            <span class="success-icon">&#10003;</span>
             <div>
                 <strong>Review submitted successfully!</strong>
-                <p>The AI has analyzed the feedback. <a href="reviews.html">View all reviews →</a></p>
+                <p>The AI has analyzed the feedback. <a href="reviews.html">View all reviews &rarr;</a></p>
             </div>
         </div>
 
@@ -82,11 +83,11 @@
                 <div class="field-group">
                     <label class="field-label">Overall Performance Rating *</label>
                     <div class="star-rating" id="starRating">
-                        <button type="button" class="star" data-value="1">★</button>
-                        <button type="button" class="star" data-value="2">★</button>
-                        <button type="button" class="star" data-value="3">★</button>
-                        <button type="button" class="star" data-value="4">★</button>
-                        <button type="button" class="star" data-value="5">★</button>
+                        <button type="button" class="star" data-value="1">&#9733;</button>
+                        <button type="button" class="star" data-value="2">&#9733;</button>
+                        <button type="button" class="star" data-value="3">&#9733;</button>
+                        <button type="button" class="star" data-value="4">&#9733;</button>
+                        <button type="button" class="star" data-value="5">&#9733;</button>
                     </div>
                     <span class="rating-label" id="ratingLabel">Click to rate</span>
                     <input type="hidden" id="ratingValue" value="0">
@@ -122,7 +123,7 @@
                     <button type="button" class="btn-secondary" onclick="clearForm()">Clear Form</button>
                     <button type="submit" class="btn-primary" id="submitBtn">
                         <span class="btn-text">Submit Review</span>
-                        <span class="btn-loader hidden">Submitting●●●</span>
+                        <span class="btn-loader hidden">Submitting&#9679;&#9679;&#9679;</span>
                     </button>
                 </div>
 

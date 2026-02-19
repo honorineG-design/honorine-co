@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Honorine Co. Employee Feedback — Admin</title>
+    <title>Honorine-co Employee Feedback &ndash; Admin</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
@@ -13,7 +13,7 @@
     <nav class="navbar">
         <div class="nav-brand">
             <span class="logo-mark">H</span>
-            <span class="nav-title">Honorine Co.</span>
+            <span class="nav-title">Honorine-co</span>
         </div>
         <div class="nav-links">
             <a href="index.html" class="nav-link">Submit Review</a>
@@ -36,37 +36,37 @@
 
         <div class="stats-grid" id="statsGrid">
             <div class="stat-card">
-                <div class="stat-icon">📊</div>
+                <div class="stat-icon">&#128202;</div>
                 <div class="stat-body">
-                    <div class="stat-val" id="statTotal">—</div>
+                    <div class="stat-val" id="statTotal">&ndash;</div>
                     <div class="stat-key">Total Feedback</div>
                 </div>
             </div>
             <div class="stat-card stat-positive">
-                <div class="stat-icon">✅</div>
+                <div class="stat-icon">&#9989;</div>
                 <div class="stat-body">
-                    <div class="stat-val" id="statPositive">—</div>
+                    <div class="stat-val" id="statPositive">&ndash;</div>
                     <div class="stat-key">Positive</div>
                 </div>
             </div>
             <div class="stat-card stat-negative">
-                <div class="stat-icon">⚠️</div>
+                <div class="stat-icon">&#9888;&#65039;</div>
                 <div class="stat-body">
-                    <div class="stat-val" id="statNegative">—</div>
+                    <div class="stat-val" id="statNegative">&ndash;</div>
                     <div class="stat-key">Negative</div>
                 </div>
             </div>
             <div class="stat-card stat-rate">
-                <div class="stat-icon">📈</div>
+                <div class="stat-icon">&#128200;</div>
                 <div class="stat-body">
-                    <div class="stat-val" id="statRate">—</div>
+                    <div class="stat-val" id="statRate">&ndash;</div>
                     <div class="stat-key">Positivity Rate</div>
                 </div>
             </div>
             <div class="stat-card">
-                <div class="stat-icon">👥</div>
+                <div class="stat-icon">&#128101;</div>
                 <div class="stat-body">
-                    <div class="stat-val" id="statUsers">—</div>
+                    <div class="stat-val" id="statUsers">&ndash;</div>
                     <div class="stat-key">Total Users</div>
                 </div>
             </div>
@@ -82,7 +82,7 @@
         <div class="card">
             <div class="card-header">
                 <h2 class="card-title">All Feedback Records</h2>
-                <button class="btn-ghost" onclick="loadData()">↻ Refresh</button>
+                <button class="btn-ghost" onclick="loadData()">&#8635; Refresh</button>
             </div>
             <div id="feedbackTable" class="table-wrap">
                 <div class="loading-state">
@@ -157,7 +157,7 @@
                                     <div class="employee-avatar small">${r.employee_name.charAt(0)}</div>
                                     ${r.employee_name}
                                 </td>
-                                <td>${r.department || '—'}</td>
+                                <td>${r.department || '&ndash;'}</td>
                                 <td>
                                     <span class="badge ${r.sentiment === 'POSITIVE' ? 'badge-positive' : 'badge-negative'}">
                                         ${r.sentiment}

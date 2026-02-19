@@ -74,7 +74,7 @@ def analyze_sentiment(text):
 
 @app.route('/')
 def home():
-    return jsonify({"status": "Honorine Co. Employee Feedback API is running!"})
+    return jsonify({"status": "Honorine-co Employee Feedback API is running!"})
 
 @app.route('/api/register', methods=['POST', 'OPTIONS'])
 def register():

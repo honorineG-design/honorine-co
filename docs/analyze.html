@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Honorine Co. Employee Feedback — AI Analysis</title>
+    <title>Honorine-co Employee Feedback &ndash; AI Analysis</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
@@ -13,7 +13,7 @@
     <nav class="navbar">
         <div class="nav-brand">
             <span class="logo-mark">H</span>
-            <span class="nav-title">Honorine Co.</span>
+            <span class="nav-title">Honorine-co</span>
         </div>
         <div class="nav-links">
             <a href="index.html" class="nav-link">Submit Review</a>
@@ -22,14 +22,14 @@
             <span id="adminLink" class="hidden"><a href="admin.html" class="nav-link">Admin</a></span>
         </div>
         <div class="nav-user">
-            <span class="user-badge" id="userBadge">—</span>
+            <span class="user-badge" id="userBadge">&ndash;</span>
             <button class="btn-ghost" onclick="handleLogout()">Sign Out</button>
         </div>
     </nav>
 
     <main class="main-content">
         <div class="page-header">
-            <p class="page-eyebrow">DistilBERT — Hugging Face</p>
+            <p class="page-eyebrow">TextBlob NLP &ndash; Sentiment Engine</p>
             <h1 class="page-title">AI Sentiment Analysis</h1>
             <p class="page-desc">Paste any employee feedback text below and instantly receive an AI-powered sentiment score.</p>
         </div>
@@ -74,15 +74,15 @@
                     </div>
 
                     <button type="submit" class="btn-primary btn-full" id="analyzeBtn">
-                        <span class="btn-text">⚡ Analyze with AI</span>
-                        <span class="btn-loader hidden">Analyzing●●●</span>
+                        <span class="btn-text">&#9889; Analyze with AI</span>
+                        <span class="btn-loader hidden">Analyzing&#9679;&#9679;&#9679;</span>
                     </button>
                 </form>
             </div>
 
             <div class="card result-card" id="resultCard">
                 <div class="result-empty" id="resultEmpty">
-                    <div class="result-empty-icon">🧠</div>
+                    <div class="result-empty-icon">&#129504;</div>
                     <p>Submit feedback to see AI analysis results here</p>
                 </div>
 
@@ -92,9 +92,9 @@
                     </div>
 
                     <div class="sentiment-display" id="sentimentDisplay">
-                        <div class="sentiment-icon" id="sentimentIcon">—</div>
+                        <div class="sentiment-icon" id="sentimentIcon">&ndash;</div>
                         <div class="sentiment-info">
-                            <span class="sentiment-label" id="sentimentLabel">—</span>
+                            <span class="sentiment-label" id="sentimentLabel">&ndash;</span>
                             <span class="sentiment-sub">AI Sentiment</span>
                         </div>
                         <div class="confidence-ring" id="confidenceRing">
@@ -111,20 +111,20 @@
                     <div class="result-details">
                         <div class="detail-row">
                             <span class="detail-key">Employee</span>
-                            <span class="detail-val" id="resEmployee">—</span>
+                            <span class="detail-val" id="resEmployee">&ndash;</span>
                         </div>
                         <div class="detail-row">
                             <span class="detail-key">Confidence</span>
-                            <span class="detail-val" id="resConfidence">—</span>
+                            <span class="detail-val" id="resConfidence">&ndash;</span>
                         </div>
                         <div class="detail-row">
                             <span class="detail-key">Model</span>
-                            <span class="detail-val">DistilBERT SST-2</span>
+                            <span class="detail-val">TextBlob Sentiment</span>
                         </div>
                     </div>
 
                     <div class="insight-box" id="insightBox">
-                        <p class="insight-text" id="insightText">—</p>
+                        <p class="insight-text" id="insightText">&ndash;</p>
                     </div>
 
                     <button class="btn-secondary btn-full" onclick="resetForm()">Analyze Another</button>
@@ -168,7 +168,7 @@
             const isPositive = data.sentiment === 'POSITIVE';
             const display = document.getElementById('sentimentDisplay');
             display.className = `sentiment-display ${isPositive ? 'sentiment-positive' : 'sentiment-negative'}`;
-            document.getElementById('sentimentIcon').textContent = isPositive ? '😊' : '😟';
+            document.getElementById('sentimentIcon').textContent = isPositive ? '\uD83D\uDE0A' : '\uD83D\uDE1F';
             document.getElementById('sentimentLabel').textContent = data.sentiment;
             document.getElementById('resEmployee').textContent = data.employee_name;
             document.getElementById('resConfidence').textContent = `${data.confidence}%`;
@@ -176,8 +176,14 @@
             arc.style.strokeDashoffset = 113 - (113 * data.confidence / 100);
             document.getElementById('confidenceText').textContent = `${Math.round(data.confidence)}%`;
             const insights = {
-                POSITIVE: ["Strong satisfaction signals detected. Consider this employee for leadership opportunities.", "Positive indicators found. This employee appears engaged and motivated."],
-                NEGATIVE: ["Concerning sentiment detected. Consider scheduling a 1-on-1 check-in.", "Negative indicators present. HR follow-up is recommended."]
+                POSITIVE: [
+                    "Strong satisfaction signals detected. Consider this employee for leadership opportunities.",
+                    "Positive indicators found. This employee appears engaged and motivated."
+                ],
+                NEGATIVE: [
+                    "Concerning sentiment detected. Consider scheduling a 1-on-1 check-in.",
+                    "Negative indicators present. HR follow-up is recommended."
+                ]
             };
             const pool = insights[data.sentiment];
             document.getElementById('insightText').textContent = pool[Math.floor(Math.random() * pool.length)];
