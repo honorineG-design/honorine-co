@@ -15,6 +15,10 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db.init_app(app)
 
+with app.app_context():
+    db.create_all()
+    print("Database ready.")
+
 @app.after_request
 def add_cors_headers(response):
     response.headers['Access-Control-Allow-Origin'] = '*'
@@ -220,7 +224,4 @@ def delete_feedback(current_user, id):
     return jsonify({"message": "Deleted successfully"})
 
 if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
-        print("Database ready.")
-app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
